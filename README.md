@@ -39,8 +39,7 @@ monitor-keyboard-fix
 To copy the `.app` bundle to Applications (optional):
 
 ```bash
-VERSION=$(brew info --json=v2 monitor-keyboard-fix | grep -o '"installed":\[{"version":"[^"]*"' | grep -o '[0-9][^"]*')
-cp -r "$(brew --cellar)/monitor-keyboard-fix/${VERSION}/Monitor Keyboard Fix.app" /Applications/
+cp -r "$(brew --cellar)/monitor-keyboard-fix/$(brew list --versions monitor-keyboard-fix | awk '{print $2}')/Monitor Keyboard Fix.app" /Applications/
 ```
 
 ### Download from GitHub Releases
