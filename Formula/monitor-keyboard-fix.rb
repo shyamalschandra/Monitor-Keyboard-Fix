@@ -1,8 +1,8 @@
 class MonitorKeyboardFix < Formula
   desc "Control Dell S2725QC monitor brightness and volume from macOS keyboard keys via DDC/CI"
   homepage "https://github.com/shyamalschandra/Monitor-Keyboard-Fix"
-  url "https://github.com/shyamalschandra/Monitor-Keyboard-Fix/archive/refs/tags/v1.1.1.tar.gz"
-  sha256 "22dcaa098ce05eae8f146842dfbe62a9482274da299daa9a21212579bf44af5f"
+  url "https://github.com/shyamalschandra/Monitor-Keyboard-Fix/archive/refs/tags/v1.1.2.tar.gz"
+  sha256 "4a9dff3329cf182bb890b3630f895000f988f8e5e3d29309198fd6bd3bf6e364"
   license "MIT"
   head "https://github.com/shyamalschandra/Monitor-Keyboard-Fix.git", branch: "main"
 
