@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
@@ -91,12 +95,15 @@ jobs:
 
           echo "Source SHA256: $SHA256"
 
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git reset --hard origin/main
+
           sed -i '' "s|archive/refs/tags/v[^\"]*\.tar\.gz|archive/refs/tags/${TAG}.tar.gz|" "$FORMULA"
           sed -i '' "s|sha256 \"[^\"]*\"|sha256 \"${SHA256}\"|" "$FORMULA"
 
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout main
           git add "$FORMULA"
-          git commit -m "Update Homebrew formula for ${TAG}" || echo "No formula changes to commit"
+          git diff --staged --quiet && echo "No formula changes" || git commit -m "Update Homebrew formula for ${TAG}"
           git push origin main
