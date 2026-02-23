@@ -7,23 +7,24 @@ import AppKit
 final class KeyInterceptor {
 
     // NX key types from IOKit/hidsystem/ev_keymap.h
-    private static let NX_KEYTYPE_SOUND_UP: UInt32     = 0
-    private static let NX_KEYTYPE_SOUND_DOWN: UInt32   = 1
-    private static let NX_KEYTYPE_MUTE: UInt32         = 7
+    private static let NX_KEYTYPE_SOUND_UP: UInt32        = 0
+    private static let NX_KEYTYPE_SOUND_DOWN: UInt32      = 1
     private static let NX_KEYTYPE_BRIGHTNESS_UP: UInt32   = 2
     private static let NX_KEYTYPE_BRIGHTNESS_DOWN: UInt32 = 3
+    private static let NX_KEYTYPE_MUTE: UInt32            = 7
+    // Alternative key types used on some Mac models / keyboard configs
+    private static let NX_KEYTYPE_ILLUMINATION_UP: UInt32   = 21
+    private static let NX_KEYTYPE_ILLUMINATION_DOWN: UInt32 = 22
 
     weak var delegate: MediaKeyDelegate?
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
 
-    /// Whether the interceptor is actively capturing key events.
     private(set) var isRunning = false
 
     /// Whether to consume (swallow) the intercepted key events so they don't
-    /// reach the system's default handler. Set to true when external monitors
-    /// are detected.
+    /// reach the system's default handler.
     var shouldConsumeEvents = true
 
     // MARK: - Accessibility Check
@@ -44,9 +45,12 @@ final class KeyInterceptor {
             return
         }
 
-        let eventMask: CGEventMask = 1 << CGEventType.keyDown.rawValue
-            | 1 << CGEventType.keyUp.rawValue
-            | (1 << 14)  // NSEventType.systemDefined = 14
+        // We need NX_SYSDEFINED (subtype 8) events which come through as
+        // CGEventType rawValue 14. Also listen for regular key events as a
+        // fallback for some keyboard configurations.
+        let eventMask: CGEventMask = (1 << 14)  // NSEvent.EventType.systemDefined
+            | (1 << CGEventType.keyDown.rawValue)
+            | (1 << CGEventType.keyUp.rawValue)
 
         let unsafeSelf = Unmanaged.passUnretained(self).toOpaque()
 
@@ -68,7 +72,7 @@ final class KeyInterceptor {
         CGEvent.tapEnable(tap: tap, enable: true)
 
         isRunning = true
-        NSLog("[KeyInterceptor] Event tap started.")
+        NSLog("[KeyInterceptor] Event tap started successfully.")
     }
 
     func stop() {
@@ -98,37 +102,44 @@ final class KeyInterceptor {
 
         let interceptor = Unmanaged<KeyInterceptor>.fromOpaque(userInfo).takeUnretainedValue()
 
+        // Re-enable the tap if macOS disabled it due to timeout
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
+            NSLog("[KeyInterceptor] Event tap was disabled (type=%d), re-enabling.", type.rawValue)
             if let tap = interceptor.eventTap {
                 CGEvent.tapEnable(tap: tap, enable: true)
             }
             return Unmanaged.passUnretained(event)
         }
 
-        let nsEvent = NSEvent(cgEvent: event)
-        guard nsEvent?.type == .systemDefined, nsEvent?.subtype.rawValue == 8 else {
+        // We only care about NX_SYSDEFINED events (subtype 8 = media/special keys)
+        guard let nsEvent = NSEvent(cgEvent: event) else {
             return Unmanaged.passUnretained(event)
         }
 
-        guard let nsEvent = nsEvent else {
+        guard nsEvent.type == .systemDefined, nsEvent.subtype.rawValue == 8 else {
             return Unmanaged.passUnretained(event)
         }
 
         let data1 = nsEvent.data1
         let keyCode = UInt32((data1 & 0xFFFF0000) >> 16)
         let keyFlags = data1 & 0x0000FFFF
-        let keyState = (keyFlags & 0xFF00) >> 8  // 0xA = key down, 0xB = key up
+        let keyState = (keyFlags & 0xFF00) >> 8
         let isKeyDown = keyState == 0x0A
+        let isRepeat = (keyFlags & 0x01) != 0
 
+        NSLog("[KeyInterceptor] SystemDefined event: keyCode=%d keyState=0x%02X isRepeat=%d data1=0x%08X",
+              keyCode, keyState, isRepeat ? 1 : 0, data1)
+
+        // Process both key-down and key-repeat events
         guard isKeyDown else {
             return Unmanaged.passUnretained(event)
         }
 
         let action: MediaKeyAction?
         switch keyCode {
-        case NX_KEYTYPE_BRIGHTNESS_UP:
+        case NX_KEYTYPE_BRIGHTNESS_UP, NX_KEYTYPE_ILLUMINATION_UP:
             action = .brightnessUp
-        case NX_KEYTYPE_BRIGHTNESS_DOWN:
+        case NX_KEYTYPE_BRIGHTNESS_DOWN, NX_KEYTYPE_ILLUMINATION_DOWN:
             action = .brightnessDown
         case NX_KEYTYPE_SOUND_UP:
             action = .volumeUp
@@ -137,10 +148,13 @@ final class KeyInterceptor {
         case NX_KEYTYPE_MUTE:
             action = .mute
         default:
+            NSLog("[KeyInterceptor] Unhandled key code: %d", keyCode)
             action = nil
         }
 
         if let action = action {
+            NSLog("[KeyInterceptor] Dispatching action: %@",
+                  String(describing: action))
             DispatchQueue.main.async {
                 interceptor.delegate?.handleMediaKey(action)
             }

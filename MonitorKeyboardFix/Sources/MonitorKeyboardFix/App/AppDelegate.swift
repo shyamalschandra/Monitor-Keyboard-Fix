@@ -10,7 +10,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
 
     private let osd = OSDOverlay.shared
 
-    /// Step size per key press: 6% of 100 gives ~17 steps across the full range.
     private let brightnessStep: Int16 = 6
     private let volumeStep: Int16 = 6
 
@@ -39,7 +38,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
         keyInterceptor.shouldConsumeEvents = true
         keyInterceptor.start()
 
-        // Re-discover monitors when displays change
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(displaysChanged),
@@ -47,7 +45,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
             object: nil
         )
 
-        NSLog("[MonitorKeyboardFix] Ready. Found %d monitor(s).", monitorManager.monitors.count)
+        NSLog("[MonitorKeyboardFix] Ready. Found %d monitor(s). Key interceptor running: %d",
+              monitorManager.monitors.count, keyInterceptor.isRunning ? 1 : 0)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -67,36 +66,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
     // MARK: - MediaKeyDelegate
 
     func handleMediaKey(_ action: MediaKeyAction) {
+        NSLog("[MonitorKeyboardFix] handleMediaKey: %@ (enabled=%d, monitors=%d)",
+              String(describing: action), statusBarMenu.isEnabled ? 1 : 0,
+              monitorManager.monitors.count)
+
         guard statusBarMenu.isEnabled else { return }
 
         switch action {
         case .brightnessUp:
             monitorManager.adjustBrightnessAll(by: brightnessStep)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                guard let self = self else { return }
-                self.osd.show(type: .brightness, level: self.monitorManager.averageBrightness)
-            }
+            showBrightnessOSD()
 
         case .brightnessDown:
             monitorManager.adjustBrightnessAll(by: -brightnessStep)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                guard let self = self else { return }
-                self.osd.show(type: .brightness, level: self.monitorManager.averageBrightness)
-            }
+            showBrightnessOSD()
 
         case .volumeUp:
             monitorManager.adjustVolumeAll(by: volumeStep)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                guard let self = self else { return }
-                self.osd.show(type: .volume, level: self.monitorManager.averageVolume)
-            }
+            showVolumeOSD()
 
         case .volumeDown:
             monitorManager.adjustVolumeAll(by: -volumeStep)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
-                guard let self = self else { return }
-                self.osd.show(type: .volume, level: self.monitorManager.averageVolume)
-            }
+            showVolumeOSD()
 
         case .mute:
             monitorManager.toggleMuteAll()
@@ -104,5 +95,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
             osd.show(type: isMuted ? .mute : .volume,
                      level: isMuted ? 0 : monitorManager.averageVolume)
         }
+    }
+
+    private func showBrightnessOSD() {
+        let level = monitorManager.averageBrightness
+        NSLog("[MonitorKeyboardFix] OSD brightness level: %d", level)
+        osd.show(type: .brightness, level: level)
+    }
+
+    private func showVolumeOSD() {
+        let level = monitorManager.averageVolume
+        NSLog("[MonitorKeyboardFix] OSD volume level: %d", level)
+        osd.show(type: .volume, level: level)
     }
 }

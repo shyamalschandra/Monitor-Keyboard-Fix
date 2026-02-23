@@ -2,6 +2,9 @@ import Foundation
 import CoreGraphics
 
 /// Represents a single external monitor with DDC/CI control capabilities.
+/// State updates are optimistic: the local brightness/volume values are updated
+/// immediately so the OSD is responsive, regardless of whether the DDC command
+/// actually succeeded on the wire.
 final class MonitorModel: Identifiable, ObservableObject {
     let id: CGDirectDisplayID
     let name: String
@@ -14,7 +17,6 @@ final class MonitorModel: Identifiable, ObservableObject {
     @Published var volume: UInt16 = 50
     @Published var isMuted: Bool = false
 
-    /// Track whether we've successfully read initial values from the monitor.
     @Published var hasReadInitialState: Bool = false
 
     init(displayID: CGDirectDisplayID, name: String, vendorID: UInt32,
@@ -39,28 +41,26 @@ final class MonitorModel: Identifiable, ObservableObject {
         hasReadInitialState = true
     }
 
-    // MARK: - DDC Write
+    // MARK: - DDC Write (optimistic)
 
     func setBrightness(_ value: UInt16) {
         let clamped = min(value, 100)
-        if ddcController.setVCP(.brightness, value: clamped) {
-            brightness = clamped
-        }
+        brightness = clamped
+        ddcController.setVCP(.brightness, value: clamped)
     }
 
     func setVolume(_ value: UInt16) {
         let clamped = min(value, 100)
-        if ddcController.setVCP(.volume, value: clamped) {
-            volume = clamped
-            if clamped > 0 { isMuted = false }
-        }
+        volume = clamped
+        if clamped > 0 { isMuted = false }
+        ddcController.setVCP(.volume, value: clamped)
     }
 
     func toggleMute() {
-        let newMuteValue: UInt16 = isMuted ? 2 : 1  // 1 = muted, 2 = unmuted
-        if ddcController.setVCP(.mute, value: newMuteValue) {
-            isMuted = !isMuted
-        }
+        let willMute = !isMuted
+        isMuted = willMute
+        let ddcValue: UInt16 = willMute ? 1 : 2  // 1 = muted, 2 = unmuted
+        ddcController.setVCP(.mute, value: ddcValue)
     }
 
     // MARK: - Adjust by Step
