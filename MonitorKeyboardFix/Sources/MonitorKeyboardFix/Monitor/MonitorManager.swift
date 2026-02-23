@@ -107,28 +107,25 @@ final class MonitorManager: ObservableObject {
     }
 
     // MARK: - Brightness / Volume Control for All Monitors
+    // These methods must be called on the main thread. They update @Published
+    // state synchronously (for OSD) and dispatch DDC I2C writes to each
+    // monitor's serial background queue.
 
     func adjustBrightnessAll(by step: Int16) {
         for monitor in monitors {
-            DispatchQueue.global(qos: .userInitiated).async {
-                monitor.adjustBrightness(by: step)
-            }
+            monitor.adjustBrightness(by: step)
         }
     }
 
     func adjustVolumeAll(by step: Int16) {
         for monitor in monitors {
-            DispatchQueue.global(qos: .userInitiated).async {
-                monitor.adjustVolume(by: step)
-            }
+            monitor.adjustVolume(by: step)
         }
     }
 
     func toggleMuteAll() {
         for monitor in monitors {
-            DispatchQueue.global(qos: .userInitiated).async {
-                monitor.toggleMute()
-            }
+            monitor.toggleMute()
         }
     }
 
