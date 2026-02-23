@@ -37,7 +37,8 @@ monitor-keyboard-fix
 To copy the `.app` bundle to Applications (optional):
 
 ```bash
-cp -r "$(brew --cellar)/monitor-keyboard-fix/1.0.0/Monitor Keyboard Fix.app" /Applications/
+VERSION=$(brew info --json=v2 monitor-keyboard-fix | grep -o '"installed":\[{"version":"[^"]*"' | grep -o '[0-9][^"]*')
+cp -r "$(brew --cellar)/monitor-keyboard-fix/${VERSION}/Monitor Keyboard Fix.app" /Applications/
 ```
 
 ### Download from GitHub Releases
@@ -53,7 +54,7 @@ cp -r "$(brew --cellar)/monitor-keyboard-fix/1.0.0/Monitor Keyboard Fix.app" /Ap
 git clone https://github.com/shyamalschandra/Monitor-Keyboard-Fix.git
 cd Monitor-Keyboard-Fix
 
-# Debug build
+# Debug build and run
 cd MonitorKeyboardFix && swift build && swift run
 
 # Release build + install to /usr/local/bin
@@ -103,16 +104,19 @@ Ensure DDC/CI is enabled on your Dell monitors:
 
 ## Creating a Release
 
-```bash
-# Tag a new version
-git tag v1.0.0
-git push origin v1.0.0
+Tag and push -- GitHub Actions handles everything else automatically (builds the release binaries, creates the GitHub Release with artifacts, and updates the Homebrew formula SHA):
 
-# GitHub Actions will automatically build and create the release.
-# Then update the Homebrew formula SHA:
-./scripts/update-formula-sha.sh v1.0.0
+```bash
+git tag v1.1.0
+git push origin v1.1.0
+```
+
+To manually update the formula SHA if needed:
+
+```bash
+./scripts/update-formula-sha.sh v1.1.0
 git add Formula/monitor-keyboard-fix.rb
-git commit -m "Update formula SHA for v1.0.0"
+git commit -m "Update formula SHA for v1.1.0"
 git push
 ```
 

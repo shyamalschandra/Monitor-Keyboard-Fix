@@ -13,9 +13,9 @@ jobs:
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
-
-      - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_15.4.app/Contents/Developer
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build release binary
         run: |
@@ -29,12 +29,10 @@ jobs:
         run: |
           VERSION=${GITHUB_REF_NAME#v}
 
-          # .app bundle tarball
           cd "MonitorKeyboardFix/.build"
           tar -czf "MonitorKeyboardFix-${VERSION}-macOS-arm64.tar.gz" "Monitor Keyboard Fix.app"
           cd ../..
 
-          # Standalone binary
           cp MonitorKeyboardFix/.build/release/MonitorKeyboardFix "monitor-keyboard-fix"
           tar -czf "MonitorKeyboardFix-${VERSION}-binary-arm64.tar.gz" monitor-keyboard-fix
           rm monitor-keyboard-fix
@@ -43,15 +41,10 @@ jobs:
         id: sha
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          SOURCE_SHA=$(shasum -a 256 <(curl -sL "https://github.com/${{ github.repository }}/archive/refs/tags/${GITHUB_REF_NAME}.tar.gz") | cut -d ' ' -f 1)
           APP_SHA=$(shasum -a 256 "MonitorKeyboardFix/.build/MonitorKeyboardFix-${VERSION}-macOS-arm64.tar.gz" | cut -d ' ' -f 1)
           BIN_SHA=$(shasum -a 256 "MonitorKeyboardFix-${VERSION}-binary-arm64.tar.gz" | cut -d ' ' -f 1)
-          echo "source_sha=${SOURCE_SHA}" >> $GITHUB_OUTPUT
           echo "app_sha=${APP_SHA}" >> $GITHUB_OUTPUT
           echo "bin_sha=${BIN_SHA}" >> $GITHUB_OUTPUT
-          echo "Source SHA256: ${SOURCE_SHA}"
-          echo "App SHA256: ${APP_SHA}"
-          echo "Binary SHA256: ${BIN_SHA}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -65,7 +58,7 @@ jobs:
 
             ### Homebrew
             ```bash
-            brew tap shyamalschandra/monitor-keyboard-fix
+            brew tap shyamalschandra/monitor-keyboard-fix https://github.com/shyamalschandra/Monitor-Keyboard-Fix.git
             brew install monitor-keyboard-fix
             ```
 
@@ -76,6 +69,34 @@ jobs:
             Download `MonitorKeyboardFix-*-binary-arm64.tar.gz`, extract, and place `monitor-keyboard-fix` in your `$PATH`.
 
             ## SHA256 Checksums
-            - Source: `${{ steps.sha.outputs.source_sha }}`
             - App Bundle: `${{ steps.sha.outputs.app_sha }}`
             - Binary: `${{ steps.sha.outputs.bin_sha }}`
+
+      - name: Update Homebrew formula
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          TAG=${GITHUB_REF_NAME}
+          FORMULA="Formula/monitor-keyboard-fix.rb"
+
+          # Wait briefly for GitHub to make the source tarball available
+          sleep 10
+
+          URL="https://github.com/${{ github.repository }}/archive/refs/tags/${TAG}.tar.gz"
+          SHA256=$(curl -sL "$URL" | shasum -a 256 | cut -d ' ' -f 1)
+
+          if [[ -z "$SHA256" || "$SHA256" == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ]]; then
+            echo "WARNING: Could not compute source SHA256. Skipping formula update."
+            exit 0
+          fi
+
+          echo "Source SHA256: $SHA256"
+
+          sed -i '' "s|archive/refs/tags/v[^\"]*\.tar\.gz|archive/refs/tags/${TAG}.tar.gz|" "$FORMULA"
+          sed -i '' "s|sha256 \"[^\"]*\"|sha256 \"${SHA256}\"|" "$FORMULA"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout main
+          git add "$FORMULA"
+          git commit -m "Update Homebrew formula for ${TAG}" || echo "No formula changes to commit"
+          git push origin main
