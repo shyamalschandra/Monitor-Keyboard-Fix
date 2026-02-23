@@ -1,5 +1,5 @@
 class MonitorKeyboardFix < Formula
-  desc "macOS menu bar app for keyboard brightness/volume control of Dell S2725QC monitors via DDC/CI"
+  desc "Control Dell S2725QC monitor brightness and volume from macOS keyboard keys via DDC/CI"
   homepage "https://github.com/shyamalschandra/Monitor-Keyboard-Fix"
   url "https://github.com/shyamalschandra/Monitor-Keyboard-Fix/archive/refs/tags/v1.0.0.tar.gz"
   sha256 "c29bcf65be18b5f6d27c47085ccca4457a35d8f64f6e7af59a7015d144212ee2"
@@ -31,16 +31,17 @@ class MonitorKeyboardFix < Formula
 
   def caveats
     <<~EOS
-      Monitor Keyboard Fix requires Accessibility permission to intercept
-      keyboard brightness and volume keys.
+      Monitor Keyboard Fix intercepts keyboard brightness and volume keys
+      and sends DDC/CI commands to your Dell S2725QC monitors. Both monitors
+      are controlled simultaneously from a single key press.
 
-      After first launch, grant access in:
+      REQUIRED: Grant Accessibility permission on first launch:
         System Settings > Privacy & Security > Accessibility
 
-      Your Dell monitors must have DDC/CI enabled:
+      REQUIRED: DDC/CI must be enabled on your Dell monitors:
         Monitor OSD > Others > DDC/CI > On
 
-      To start the app from the command line:
+      To start the app:
         monitor-keyboard-fix
 
       To copy the .app bundle to /Applications:
@@ -48,6 +49,9 @@ class MonitorKeyboardFix < Formula
 
       To start automatically at login, add it to:
         System Settings > General > Login Items
+
+      For troubleshooting, run from Terminal to see diagnostic logs:
+        monitor-keyboard-fix
     EOS
   end
 

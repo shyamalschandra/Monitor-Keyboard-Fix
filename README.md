@@ -1,6 +1,6 @@
 # Monitor Keyboard Fix
 
-A macOS menu bar app that enables keyboard brightness and volume control for Dell S2725QC external monitors over DDC/CI.
+A macOS menu bar app that enables keyboard brightness and volume control for Dell S2725QC external monitors over DDC/CI. Controls both monitors simultaneously from a single key press.
 
 ## Problem
 
@@ -14,10 +14,12 @@ This app intercepts keyboard media keys and sends DDC/CI commands directly to yo
 
 - Keyboard brightness keys (F1/F2) adjust external monitor backlight brightness
 - Keyboard volume keys (F10/F11/F12) adjust external monitor speaker volume
+- Simultaneous dual-monitor control -- both monitors change together on each key press
 - Native macOS-style OSD (on-screen display) overlay for visual feedback
 - Menu bar popover with per-monitor brightness/volume sliders
-- Automatic detection of multiple monitors
+- Automatic detection of multiple monitors with DDC/CI probing
 - Automatic re-scan when displays are connected/disconnected
+- Per-monitor serial DDC queues to prevent I2C bus contention
 
 ## Install
 
@@ -88,10 +90,10 @@ Ensure DDC/CI is enabled on your Dell monitors:
 
 ## How It Works
 
-1. **Monitor Discovery**: Enumerates `DCPAVServiceProxy` / `AppleCLCD2` IOKit nodes to find external displays and create `IOAVService` references
-2. **Key Interception**: Uses a `CGEvent` tap to capture system-defined media key events (brightness, volume, mute)
-3. **DDC/CI Commands**: Constructs VESA MCCS VCP packets and sends them over I2C using `IOAVServiceWriteI2C` with retry logic
-4. **OSD Overlay**: Displays a native-style translucent overlay with a segmented level bar
+1. **Monitor Discovery**: Enumerates `DCPAVServiceProxy` / `AppleCLCD2` IOKit nodes, creates `IOAVService` handles, and probes each with a DDC brightness read to pair the correct handle with each external display
+2. **Key Interception**: Uses a `CGEvent` tap to capture `NX_SYSDEFINED` media key events (brightness up/down, volume up/down, mute), including `NX_KEYTYPE_ILLUMINATION` variants for Mac models that use alternate key codes
+3. **DDC/CI Commands**: Constructs VESA MCCS VCP packets and sends them over I2C using `IOAVServiceWriteI2C` with retry logic (4 retries, 10ms/50ms/20ms timing). Each monitor has a dedicated serial dispatch queue to prevent I2C bus contention
+4. **OSD Overlay**: Displays a native-style translucent HUD overlay with a segmented level bar. State is updated optimistically on the main thread so the OSD always reflects the intended value immediately
 
 ### VCP Codes Used
 
@@ -101,6 +103,16 @@ Ensure DDC/CI is enabled on your Dell monitors:
 | 0x12 | Contrast |
 | 0x62 | Volume |
 | 0x8D | Audio Mute |
+
+## Debugging
+
+Run the app from Terminal to see diagnostic logs for the entire chain -- key events, monitor discovery, IOAVService pairing, and DDC read/write results:
+
+```bash
+cd MonitorKeyboardFix && swift run
+```
+
+Log prefixes: `[KeyInterceptor]`, `[MonitorManager]`, `[DDC]`, `[MonitorKeyboardFix]`
 
 ## Creating a Release
 
