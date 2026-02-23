@@ -20,6 +20,8 @@ This app intercepts keyboard media keys and sends DDC/CI commands directly to yo
 - Automatic detection of multiple monitors with DDC/CI probing
 - Automatic re-scan when displays are connected/disconnected
 - Per-monitor serial DDC queues to prevent I2C bus contention
+- Ad-hoc code-signed `.app` bundle for reliable macOS TCC permission persistence
+- Custom app icon
 
 ## Install
 
@@ -96,7 +98,7 @@ Ensure DDC/CI is enabled on your Dell monitors:
 ## How It Works
 
 1. **Monitor Discovery**: Enumerates `DCPAVServiceProxy` / `AppleCLCD2` IOKit nodes, creates `IOAVService` handles, and probes each with a DDC brightness read to pair the correct handle with each external display
-2. **Key Interception**: Dual-layer approach. A `CGEvent` tap captures `NX_SYSDEFINED` media key events for volume/mute. An `IOHIDManager`-based interceptor captures brightness keys directly from keyboard HID reports -- essential on Mac Studio/Mac Mini where macOS consumes brightness events at the WindowServer level before CGEvent taps see them
+2. **Key Interception**: Dual-layer approach. A `CGEvent` tap captures `NX_SYSDEFINED` media key events for volume/mute. An `IOHIDManager`-based interceptor captures brightness keys directly from keyboard HID reports on the Apple Vendor Keyboard page (`0xFF01`, usages `0x0020`/`0x0021`) -- essential on Mac Studio/Mac Mini where macOS consumes brightness events at the WindowServer level before CGEvent taps see them
 3. **DDC/CI Commands**: Constructs VESA MCCS VCP packets and sends them over I2C using `IOAVServiceWriteI2C` with retry logic (4 retries, 10ms/50ms/20ms timing). Each monitor has a dedicated serial dispatch queue to prevent I2C bus contention
 4. **OSD Overlay**: Displays a native-style translucent HUD overlay with a segmented level bar. State is updated optimistically on the main thread so the OSD always reflects the intended value immediately
 
@@ -143,6 +145,7 @@ git push
 - Physical button changes on the monitor won't sync back to the app
 - `IOAVService` APIs are private Apple APIs (stable since M1 launch in 2020, but could change)
 - Using a USB-C dock may degrade DDC reliability; direct connection is recommended
+- The app must be code-signed (ad-hoc is sufficient) for macOS TCC to persist Accessibility and Input Monitoring permissions
 
 ## License
 
