@@ -2,7 +2,7 @@ class MonitorKeyboardFix < Formula
   desc "macOS menu bar app for keyboard brightness/volume control of Dell S2725QC monitors via DDC/CI"
   homepage "https://github.com/shyamalschandra/Monitor-Keyboard-Fix"
   url "https://github.com/shyamalschandra/Monitor-Keyboard-Fix/archive/refs/tags/v1.0.0.tar.gz"
-  sha256 "PLACEHOLDER_SHA256"
+  sha256 "c29bcf65be18b5f6d27c47085ccca4457a35d8f64f6e7af59a7015d144212ee2"
   license "MIT"
   head "https://github.com/shyamalschandra/Monitor-Keyboard-Fix.git", branch: "main"
 
