@@ -60,6 +60,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
             name: NSApplication.didChangeScreenParametersNotification,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidBecomeActive),
+            name: NSApplication.didBecomeActiveNotification,
+            object: nil
+        )
 
         NSLog("[MonitorKeyboardFix] Ready. Found %d monitor(s). CGEvent tap: %d, HID interceptor: %d",
               monitorManager.monitors.count, keyInterceptor.isRunning ? 1 : 0,
@@ -81,6 +87,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
         }
     }
 
+    @objc private func applicationDidBecomeActive() {
+        if statusBarMenu?.isEnabled == true, !hidKeyInterceptor.isRunning {
+            NSLog("[MonitorKeyboardFix] App became active; retrying HID interceptor (e.g. after granting Input Monitoring).")
+            hidKeyInterceptor.start()
+        }
+    }
+
     // MARK: - MediaKeyDelegate
 
     func handleMediaKey(_ action: MediaKeyAction) {
@@ -88,7 +101,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
               String(describing: action), statusBarMenu.isEnabled ? 1 : 0,
               monitorManager.monitors.count)
 
-        guard statusBarMenu.isEnabled else { return }
+        guard statusBarMenu.isEnabled else {
+            NSLog("[MonitorKeyboardFix] Ignored (app disabled in menu). Enable via menu bar icon.")
+            return
+        }
 
         switch action {
         case .brightnessUp:

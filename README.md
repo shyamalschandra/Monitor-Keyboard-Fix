@@ -44,6 +44,13 @@ To copy the `.app` bundle to Applications (optional):
 cp -r "$(brew --cellar)/monitor-keyboard-fix/$(brew list --versions monitor-keyboard-fix | awk '{print $2}')/Monitor Keyboard Fix.app" /Applications/
 ```
 
+If you see version 1.0.0 or old caveats (e.g. only "Accessibility", or a wrong `.app` path), refresh the tap and upgrade:
+
+```bash
+brew update
+brew upgrade monitor-keyboard-fix
+```
+
 ### Download from GitHub Releases
 
 1. Go to [Releases](https://github.com/shyamalschandra/Monitor-Keyboard-Fix/releases)
@@ -85,15 +92,15 @@ xattr -cr "/Applications/Monitor Keyboard Fix.app"
 
 ## Permissions
 
-On first launch, the app will prompt for two permissions:
+**Both** of these must be granted or brightness/volume keys will not work:
 
-1. **Accessibility** -- required for the CGEvent tap that intercepts volume/mute keys.
-   Grant in: **System Settings > Privacy & Security > Accessibility**
+1. **Accessibility** — for volume/mute keys.  
+   **System Settings > Privacy & Security > Accessibility** — add "Monitor Keyboard Fix".
 
-2. **Input Monitoring** -- required for the HID-level interceptor that captures brightness keys.
-   On Mac Studio/Mac Mini (no built-in display), macOS handles brightness keys internally and
-   never exposes them to CGEvent taps. The HID interceptor captures them directly from the keyboard hardware.
-   Grant in: **System Settings > Privacy & Security > Input Monitoring**
+2. **Input Monitoring** — **required for brightness keys** on Mac Studio/Mac Mini (no built-in display).  
+   **System Settings > Privacy & Security > Input Monitoring** — add "Monitor Keyboard Fix".
+
+After adding Input Monitoring, switch back to the app (or relaunch it); the app will retry opening the keyboard automatically. If brightness keys still do nothing, run the app from Terminal (`monitor-keyboard-fix` or `cd MonitorKeyboardFix && swift run`) and watch for `[HIDKeyInterceptor]` messages — "Open failed: 0xE00002E2" means Input Monitoring is still not granted; "HID key down #N: usagePage=0x..." means keys are being received.
 
 ## Monitor Setup
 

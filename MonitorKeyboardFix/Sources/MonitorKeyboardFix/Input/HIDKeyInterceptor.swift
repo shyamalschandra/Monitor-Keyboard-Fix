@@ -78,9 +78,7 @@ final class HIDKeyInterceptor {
 
         let result = IOHIDManagerOpen(manager, IOOptionBits(kIOHIDOptionsTypeNone))
         if result != kIOReturnSuccess {
-            NSLog("[HIDKeyInterceptor] Failed to open IOHIDManager: 0x%X. "
-                + "Grant Input Monitoring in System Settings > Privacy & Security > Input Monitoring.",
-                  result)
+            NSLog("[HIDKeyInterceptor] Open failed: 0x%X. Grant Input Monitoring in System Settings > Privacy & Security > Input Monitoring, then relaunch the app.", result)
             if result == IOReturn(bitPattern: 0xE00002E2) {
                 DispatchQueue.main.async {
                     HIDKeyInterceptor.promptInputMonitoring()
@@ -90,7 +88,7 @@ final class HIDKeyInterceptor {
         }
 
         isRunning = true
-        NSLog("[HIDKeyInterceptor] Started. Listening for Apple Vendor Keyboard page 0xFF01 brightness events.")
+        NSLog("[HIDKeyInterceptor] Started. Listening for brightness (page 0xFF01 usages 0x0020/0x0021). Press F1/F2 to test.")
     }
 
     func stop() {
@@ -137,6 +135,10 @@ final class HIDKeyInterceptor {
         interceptor.handleHIDValue(value)
     }
 
+    /// Log first few HID key-downs with usage to diagnose wrong codes (e.g. different keyboard firmware).
+    private var hidDiagnosticCount: Int = 0
+    private let hidDiagnosticLimit: Int = 30
+
     private func handleHIDValue(_ value: IOHIDValue) {
         let element = IOHIDValueGetElement(value)
         let usagePage = IOHIDElementGetUsagePage(element)
@@ -144,6 +146,14 @@ final class HIDKeyInterceptor {
         let intValue = IOHIDValueGetIntegerValue(value)
 
         guard intValue == 1 else { return }
+
+        if hidDiagnosticCount < hidDiagnosticLimit {
+            hidDiagnosticCount += 1
+            let page = UInt32(usagePage), u = UInt32(usage)
+            if page == 0xFF01 || page == 0x0C || (page == 0x07 && (u == 0x69 || u == 0x6A)) {
+                NSLog("[HIDKeyInterceptor] HID key down #%d: usagePage=0x%04X usage=0x%04X", hidDiagnosticCount, page, u)
+            }
+        }
 
         var action: MediaKeyAction?
 
