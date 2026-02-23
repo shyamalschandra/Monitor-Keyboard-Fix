@@ -3,7 +3,7 @@ BINDIR = $(PREFIX)/bin
 APPDIR = $(PREFIX)/Applications
 APP_NAME = Monitor Keyboard Fix
 BUNDLE_ID = com.shyamalschandra.MonitorKeyboardFix
-VERSION = 1.0.0
+VERSION = 1.1.0
 
 BUILD_DIR = MonitorKeyboardFix/.build
 RELEASE_BIN = $(BUILD_DIR)/release/MonitorKeyboardFix
