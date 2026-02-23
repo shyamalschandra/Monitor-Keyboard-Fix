@@ -6,6 +6,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
 
     let monitorManager = MonitorManager()
     let keyInterceptor = KeyInterceptor()
+    let hidKeyInterceptor = HIDKeyInterceptor()
     var statusBarMenu: StatusBarMenu!
 
     private let osd = OSDOverlay.shared
@@ -26,8 +27,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
             guard let self = self else { return }
             if enabled {
                 self.keyInterceptor.start()
+                self.hidKeyInterceptor.start()
             } else {
                 self.keyInterceptor.stop()
+                self.hidKeyInterceptor.stop()
             }
         }
         statusBarMenu.setup()
@@ -38,6 +41,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
         keyInterceptor.shouldConsumeEvents = true
         keyInterceptor.start()
 
+        hidKeyInterceptor.delegate = self
+        hidKeyInterceptor.start()
+
+        // After a short delay, check if CGEvent tap captured brightness keys.
+        // If not, HID interceptor takes over brightness handling.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { [weak self] in
+            guard let self = self else { return }
+            self.hidKeyInterceptor.cgEventTapHandlesBrightness = self.keyInterceptor.hasCapturedBrightnessEvent
+            NSLog("[MonitorKeyboardFix] CGEvent tap handles brightness: %d, HID interceptor active: %d",
+                  self.keyInterceptor.hasCapturedBrightnessEvent ? 1 : 0,
+                  self.hidKeyInterceptor.isRunning ? 1 : 0)
+        }
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(displaysChanged),
@@ -45,12 +61,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
             object: nil
         )
 
-        NSLog("[MonitorKeyboardFix] Ready. Found %d monitor(s). Key interceptor running: %d",
-              monitorManager.monitors.count, keyInterceptor.isRunning ? 1 : 0)
+        NSLog("[MonitorKeyboardFix] Ready. Found %d monitor(s). CGEvent tap: %d, HID interceptor: %d",
+              monitorManager.monitors.count, keyInterceptor.isRunning ? 1 : 0,
+              hidKeyInterceptor.isRunning ? 1 : 0)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         keyInterceptor.stop()
+        hidKeyInterceptor.stop()
         NSLog("[MonitorKeyboardFix] Shutting down.")
     }
 

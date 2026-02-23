@@ -1,0 +1,97 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a4a8a"/>
+      <stop offset="100%" stop-color="#1a1a3e"/>
+    </linearGradient>
+    <linearGradient id="screen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1e2a4a"/>
+      <stop offset="100%" stop-color="#0d1525"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#d0d0d0"/>
+      <stop offset="100%" stop-color="#909090"/>
+    </linearGradient>
+    <linearGradient id="sun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe066"/>
+      <stop offset="100%" stop-color="#ffb300"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0.5" y1="0.5" x2="0.5" y2="0" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#ffd60a" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#ffd60a" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="15" flood-color="#000" flood-opacity="0.35"/>
+    </filter>
+    <filter id="sunGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="12"/>
+    </filter>
+  </defs>
+
+  <!-- Rounded square background (macOS squircle) -->
+  <rect x="0" y="0" width="1024" height="1024" rx="228" ry="228" fill="url(#bg)"/>
+
+  <!-- Monitor group -->
+  <g filter="url(#shadow)">
+    <!-- Monitor stand base -->
+    <ellipse cx="512" cy="740" rx="120" ry="18" fill="#888" opacity="0.7"/>
+    <!-- Monitor stand neck -->
+    <rect x="492" y="660" width="40" height="85" rx="4" fill="url(#frame)"/>
+
+    <!-- Monitor frame -->
+    <rect x="192" y="200" width="640" height="460" rx="20" ry="20" fill="url(#frame)"/>
+    <!-- Screen -->
+    <rect x="212" y="218" width="600" height="400" rx="6" ry="6" fill="url(#screen)"/>
+
+    <!-- Chin -->
+    <rect x="192" y="620" width="640" height="40" rx="0" ry="0" fill="url(#frame)" opacity="0.9"/>
+  </g>
+
+  <!-- Sun glow (behind sun) -->
+  <circle cx="512" cy="400" r="100" fill="url(#glow)" filter="url(#sunGlow)"/>
+
+  <!-- Sun body -->
+  <circle cx="512" cy="400" r="52" fill="url(#sun)"/>
+
+  <!-- Sun rays -->
+  <g stroke="url(#sun)" stroke-width="10" stroke-linecap="round">
+    <line x1="512" y1="320" x2="512" y2="296"/>
+    <line x1="512" y1="480" x2="512" y2="504"/>
+    <line x1="432" y1="400" x2="408" y2="400"/>
+    <line x1="592" y1="400" x2="616" y2="400"/>
+    <line x1="455" y1="343" x2="438" y2="326"/>
+    <line x1="569" y1="343" x2="586" y2="326"/>
+    <line x1="455" y1="457" x2="438" y2="474"/>
+    <line x1="569" y1="457" x2="586" y2="474"/>
+  </g>
+
+  <!-- Small keyboard silhouette below monitor -->
+  <g opacity="0.6">
+    <rect x="362" y="778" width="300" height="60" rx="10" ry="10" fill="#556" stroke="#778" stroke-width="2"/>
+    <!-- Key rows -->
+    <g fill="#445" opacity="0.8">
+      <rect x="378" y="788" width="22" height="14" rx="2"/>
+      <rect x="404" y="788" width="22" height="14" rx="2"/>
+      <rect x="430" y="788" width="22" height="14" rx="2"/>
+      <rect x="456" y="788" width="22" height="14" rx="2"/>
+      <rect x="482" y="788" width="22" height="14" rx="2"/>
+      <rect x="508" y="788" width="22" height="14" rx="2"/>
+      <rect x="534" y="788" width="22" height="14" rx="2"/>
+      <rect x="560" y="788" width="22" height="14" rx="2"/>
+      <rect x="586" y="788" width="22" height="14" rx="2"/>
+      <rect x="612" y="788" width="22" height="14" rx="2"/>
+      <rect x="378" y="808" width="22" height="14" rx="2"/>
+      <rect x="404" y="808" width="22" height="14" rx="2"/>
+      <rect x="430" y="808" width="22" height="14" rx="2"/>
+      <rect x="456" y="808" width="22" height="14" rx="2"/>
+      <rect x="482" y="808" width="22" height="14" rx="2"/>
+      <rect x="508" y="808" width="22" height="14" rx="2"/>
+      <rect x="534" y="808" width="22" height="14" rx="2"/>
+      <rect x="560" y="808" width="22" height="14" rx="2"/>
+      <rect x="586" y="808" width="22" height="14" rx="2"/>
+      <rect x="612" y="808" width="22" height="14" rx="2"/>
+    </g>
+    <!-- Spacebar -->
+    <rect x="430" y="826" width="164" height="8" rx="2" fill="#445" opacity="0.8"/>
+  </g>
+</svg>

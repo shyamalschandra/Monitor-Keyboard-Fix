@@ -27,6 +27,10 @@ final class KeyInterceptor {
     /// reach the system's default handler.
     var shouldConsumeEvents = true
 
+    /// Set to true when this tap successfully receives a brightness key event.
+    /// HIDKeyInterceptor checks this to avoid double-handling.
+    var hasCapturedBrightnessEvent = false
+
     // MARK: - Accessibility Check
 
     static func checkAccessibilityPermission() -> Bool {
@@ -155,6 +159,9 @@ final class KeyInterceptor {
         if let action = action {
             NSLog("[KeyInterceptor] Dispatching action: %@",
                   String(describing: action))
+            if action == .brightnessUp || action == .brightnessDown {
+                interceptor.hasCapturedBrightnessEvent = true
+            }
             DispatchQueue.main.async {
                 interceptor.delegate?.handleMediaKey(action)
             }

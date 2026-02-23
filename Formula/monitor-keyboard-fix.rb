@@ -26,6 +26,7 @@ class MonitorKeyboardFix < Formula
 
     cp bin/"monitor-keyboard-fix", app_bundle/"Contents/MacOS/MonitorKeyboardFix"
     cp "MonitorKeyboardFix/Info.plist", app_bundle/"Contents/Info.plist"
+    cp "MonitorKeyboardFix/Sources/MonitorKeyboardFix/Resources/AppIcon.icns", app_bundle/"Contents/Resources/AppIcon.icns"
     (app_bundle/"Contents/PkgInfo").write "APPL????"
   end
 
@@ -35,8 +36,12 @@ class MonitorKeyboardFix < Formula
       and sends DDC/CI commands to your Dell S2725QC monitors. Both monitors
       are controlled simultaneously from a single key press.
 
-      REQUIRED: Grant Accessibility permission on first launch:
-        System Settings > Privacy & Security > Accessibility
+      REQUIRED: Grant both permissions on first launch:
+        1. System Settings > Privacy & Security > Accessibility
+        2. System Settings > Privacy & Security > Input Monitoring
+
+      Input Monitoring is needed for brightness keys on Mac Studio/Mac Mini
+      (macOS consumes brightness events before CGEvent taps on these Macs).
 
       REQUIRED: DDC/CI must be enabled on your Dell monitors:
         Monitor OSD > Others > DDC/CI > On

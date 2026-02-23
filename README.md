@@ -75,9 +75,15 @@ make app-bundle
 
 ## Permissions
 
-On first launch, the app will prompt for **Accessibility** permission. This is required to intercept keyboard media key events. Grant access in:
+On first launch, the app will prompt for two permissions:
 
-**System Settings > Privacy & Security > Accessibility**
+1. **Accessibility** -- required for the CGEvent tap that intercepts volume/mute keys.
+   Grant in: **System Settings > Privacy & Security > Accessibility**
+
+2. **Input Monitoring** -- required for the HID-level interceptor that captures brightness keys.
+   On Mac Studio/Mac Mini (no built-in display), macOS handles brightness keys internally and
+   never exposes them to CGEvent taps. The HID interceptor captures them directly from the keyboard hardware.
+   Grant in: **System Settings > Privacy & Security > Input Monitoring**
 
 ## Monitor Setup
 
@@ -90,7 +96,7 @@ Ensure DDC/CI is enabled on your Dell monitors:
 ## How It Works
 
 1. **Monitor Discovery**: Enumerates `DCPAVServiceProxy` / `AppleCLCD2` IOKit nodes, creates `IOAVService` handles, and probes each with a DDC brightness read to pair the correct handle with each external display
-2. **Key Interception**: Uses a `CGEvent` tap to capture `NX_SYSDEFINED` media key events (brightness up/down, volume up/down, mute), including `NX_KEYTYPE_ILLUMINATION` variants for Mac models that use alternate key codes
+2. **Key Interception**: Dual-layer approach. A `CGEvent` tap captures `NX_SYSDEFINED` media key events for volume/mute. An `IOHIDManager`-based interceptor captures brightness keys directly from keyboard HID reports -- essential on Mac Studio/Mac Mini where macOS consumes brightness events at the WindowServer level before CGEvent taps see them
 3. **DDC/CI Commands**: Constructs VESA MCCS VCP packets and sends them over I2C using `IOAVServiceWriteI2C` with retry logic (4 retries, 10ms/50ms/20ms timing). Each monitor has a dedicated serial dispatch queue to prevent I2C bus contention
 4. **OSD Overlay**: Displays a native-style translucent HUD overlay with a segmented level bar. State is updated optimistically on the main thread so the OSD always reflects the intended value immediately
 
@@ -111,7 +117,7 @@ Run the app from Terminal to see diagnostic logs for the entire chain -- key eve
 cd MonitorKeyboardFix && swift run
 ```
 
-Log prefixes: `[KeyInterceptor]`, `[MonitorManager]`, `[DDC]`, `[MonitorKeyboardFix]`
+Log prefixes: `[KeyInterceptor]`, `[HIDKeyInterceptor]`, `[MonitorManager]`, `[DDC]`, `[MonitorKeyboardFix]`
 
 ## Creating a Release
 

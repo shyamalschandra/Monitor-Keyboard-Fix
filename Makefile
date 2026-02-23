@@ -24,7 +24,7 @@ app-bundle: release
 	@mkdir -p "$(APP_BUNDLE)/Contents/Resources"
 	@cp "$(RELEASE_BIN)" "$(APP_BUNDLE)/Contents/MacOS/MonitorKeyboardFix"
 	@cp MonitorKeyboardFix/Info.plist "$(APP_BUNDLE)/Contents/Info.plist"
-	@# Generate PkgInfo
+	@cp MonitorKeyboardFix/Sources/MonitorKeyboardFix/Resources/AppIcon.icns "$(APP_BUNDLE)/Contents/Resources/AppIcon.icns"
 	@echo "APPL????" > "$(APP_BUNDLE)/Contents/PkgInfo"
 	@echo "Created $(APP_BUNDLE)"
 
