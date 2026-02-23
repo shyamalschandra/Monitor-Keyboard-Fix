@@ -28,10 +28,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
             if enabled {
                 self.keyInterceptor.start()
                 self.hidKeyInterceptor.start()
+                self.updateHIDStatus()
             } else {
                 self.keyInterceptor.stop()
                 self.hidKeyInterceptor.stop()
+                self.updateHIDStatus()
             }
+        }
+        statusBarMenu.onRetryHID = { [weak self] in
+            guard let self = self else { return }
+            self.hidKeyInterceptor.start()
+            self.updateHIDStatus()
         }
         statusBarMenu.setup()
 
@@ -43,12 +50,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
 
         hidKeyInterceptor.delegate = self
         hidKeyInterceptor.start()
+        updateHIDStatus()
 
         // After a short delay, check if CGEvent tap captured brightness keys.
         // If not, HID interceptor takes over brightness handling.
         DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) { [weak self] in
             guard let self = self else { return }
             self.hidKeyInterceptor.cgEventTapHandlesBrightness = self.keyInterceptor.hasCapturedBrightnessEvent
+            self.updateHIDStatus()
             NSLog("[MonitorKeyboardFix] CGEvent tap handles brightness: %d, HID interceptor active: %d",
                   self.keyInterceptor.hasCapturedBrightnessEvent ? 1 : 0,
                   self.hidKeyInterceptor.isRunning ? 1 : 0)
@@ -91,6 +100,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, MediaKeyDelegate {
         if statusBarMenu?.isEnabled == true, !hidKeyInterceptor.isRunning {
             NSLog("[MonitorKeyboardFix] App became active; retrying HID interceptor (e.g. after granting Input Monitoring).")
             hidKeyInterceptor.start()
+            updateHIDStatus()
+        }
+    }
+
+    private func updateHIDStatus() {
+        DispatchQueue.main.async { [weak self] in
+            self?.statusBarMenu?.isHIDInterceptorRunning = self?.hidKeyInterceptor.isRunning ?? false
         }
     }
 

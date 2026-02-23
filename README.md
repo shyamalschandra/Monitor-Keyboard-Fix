@@ -16,7 +16,7 @@ This app intercepts keyboard media keys and sends DDC/CI commands directly to yo
 - Keyboard volume keys (F10/F11/F12) adjust external monitor speaker volume
 - Simultaneous dual-monitor control -- both monitors change together on each key press
 - Native macOS-style OSD (on-screen display) overlay for visual feedback
-- Menu bar popover with per-monitor brightness/volume sliders
+- Menu bar popover with per-monitor brightness/volume sliders and **brightness-key status** (shows whether F1/F2 are active or need Input Monitoring, with one-tap "Open System Settings" and "Retry")
 - Automatic detection of multiple monitors with DDC/CI probing
 - Automatic re-scan when displays are connected/disconnected
 - Per-monitor serial DDC queues to prevent I2C bus contention

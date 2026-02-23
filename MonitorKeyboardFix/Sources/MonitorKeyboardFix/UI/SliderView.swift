@@ -47,10 +47,13 @@ struct MonitorSliderView: View {
     }
 }
 
+private let inputMonitoringSettingsURL = "x-apple.systempreferences:com.apple.preference.security?Privacy_ListenEvent"
+
 /// The full popover view containing sliders for all monitors.
 struct StatusBarPopoverView: View {
     @ObservedObject var monitorManager: MonitorManager
     @Binding var isEnabled: Bool
+    @ObservedObject var statusBarMenu: StatusBarMenu
     let onQuit: () -> Void
 
     var body: some View {
@@ -114,6 +117,48 @@ struct StatusBarPopoverView: View {
 
             Divider()
                 .padding(.horizontal, 8)
+
+            if statusBarMenu.isHIDInterceptorRunning {
+                HStack(spacing: 6) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(.green)
+                    Text("Brightness keys (F1/F2): active")
+                        .font(.system(size: 11))
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 4)
+            } else {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.orange)
+                        Text("Brightness keys (F1/F2): need Input Monitoring")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                    HStack(spacing: 8) {
+                        Button("Open System Settings") {
+                            if let url = URL(string: inputMonitoringSettingsURL) {
+                                NSWorkspace.shared.open(url)
+                            }
+                        }
+                        .font(.system(size: 11))
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                        Button("Retry") {
+                            statusBarMenu.onRetryHID?()
+                        }
+                        .font(.system(size: 11))
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+            }
 
             HStack {
                 Toggle("Keyboard Control", isOn: $isEnabled)

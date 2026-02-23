@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// Manages the NSStatusItem in the macOS menu bar and its popover.
-final class StatusBarMenu: NSObject {
+final class StatusBarMenu: NSObject, ObservableObject {
 
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
@@ -15,8 +15,13 @@ final class StatusBarMenu: NSObject {
             onEnabledChanged?(isEnabled)
         }
     }
+    /// True when the HID interceptor is running (brightness keys F1/F2 work). False when Input Monitoring is not granted.
+    @Published var isHIDInterceptorRunning: Bool = false
+
     var onQuit: (() -> Void)?
     var onEnabledChanged: ((Bool) -> Void)?
+    /// Call to retry starting the HID interceptor (e.g. after user grants Input Monitoring).
+    var onRetryHID: (() -> Void)?
 
     init(monitorManager: MonitorManager) {
         self.monitorManager = monitorManager
@@ -55,6 +60,7 @@ final class StatusBarMenu: NSObject {
         let popoverView = StatusBarPopoverView(
             monitorManager: monitorManager,
             isEnabled: isEnabledBinding,
+            statusBarMenu: self,
             onQuit: { [weak self] in self?.onQuit?() }
         )
 
