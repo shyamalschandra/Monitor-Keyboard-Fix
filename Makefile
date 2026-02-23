@@ -9,7 +9,7 @@ BUILD_DIR = MonitorKeyboardFix/.build
 RELEASE_BIN = $(BUILD_DIR)/release/MonitorKeyboardFix
 APP_BUNDLE = $(BUILD_DIR)/$(APP_NAME).app
 
-.PHONY: build release install uninstall app-bundle clean dist
+.PHONY: build release install uninstall app-bundle app-install clean dist
 
 build:
 	cd MonitorKeyboardFix && swift build
@@ -28,6 +28,12 @@ app-bundle: release
 	@echo "APPL????" > "$(APP_BUNDLE)/Contents/PkgInfo"
 	@codesign --force --deep --sign - "$(APP_BUNDLE)"
 	@echo "Created and signed $(APP_BUNDLE)"
+
+app-install: app-bundle
+	@rm -rf "/Applications/$(APP_NAME).app"
+	@cp -R "$(APP_BUNDLE)" /Applications/
+	@xattr -cr "/Applications/$(APP_NAME).app"
+	@echo "Installed /Applications/$(APP_NAME).app"
 
 install: release
 	@echo "Installing MonitorKeyboardFix to $(BINDIR)..."

@@ -63,9 +63,17 @@ cd MonitorKeyboardFix && swift build && swift run
 # Release build + install to /usr/local/bin
 make install
 
-# Or build a .app bundle
+# Or build a .app bundle and install to /Applications
+make app-install
+# Or just build without installing:
 make app-bundle
 # Output: MonitorKeyboardFix/.build/Monitor Keyboard Fix.app
+```
+
+If macOS says the app is "damaged" on first launch, clear the quarantine attribute:
+
+```bash
+xattr -cr "/Applications/Monitor Keyboard Fix.app"
 ```
 
 ## Requirements
