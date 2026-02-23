@@ -28,6 +28,8 @@ class MonitorKeyboardFix < Formula
     cp "MonitorKeyboardFix/Info.plist", app_bundle/"Contents/Info.plist"
     cp "MonitorKeyboardFix/Sources/MonitorKeyboardFix/Resources/AppIcon.icns", app_bundle/"Contents/Resources/AppIcon.icns"
     (app_bundle/"Contents/PkgInfo").write "APPL????"
+
+    system "codesign", "--force", "--deep", "--sign", "-", app_bundle
   end
 
   def caveats

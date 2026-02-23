@@ -26,7 +26,8 @@ app-bundle: release
 	@cp MonitorKeyboardFix/Info.plist "$(APP_BUNDLE)/Contents/Info.plist"
 	@cp MonitorKeyboardFix/Sources/MonitorKeyboardFix/Resources/AppIcon.icns "$(APP_BUNDLE)/Contents/Resources/AppIcon.icns"
 	@echo "APPL????" > "$(APP_BUNDLE)/Contents/PkgInfo"
-	@echo "Created $(APP_BUNDLE)"
+	@codesign --force --deep --sign - "$(APP_BUNDLE)"
+	@echo "Created and signed $(APP_BUNDLE)"
 
 install: release
 	@echo "Installing MonitorKeyboardFix to $(BINDIR)..."
