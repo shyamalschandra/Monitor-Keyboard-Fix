@@ -37,7 +37,7 @@ monitor-keyboard-fix
 To copy the `.app` bundle to Applications (optional):
 
 ```bash
-cp -r "$(brew --prefix)/Monitor Keyboard Fix.app" /Applications/
+cp -r "$(brew --cellar)/monitor-keyboard-fix/1.0.0/Monitor Keyboard Fix.app" /Applications/
 ```
 
 ### Download from GitHub Releases

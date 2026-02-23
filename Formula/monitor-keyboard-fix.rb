@@ -40,11 +40,11 @@ class MonitorKeyboardFix < Formula
       Your Dell monitors must have DDC/CI enabled:
         Monitor OSD > Others > DDC/CI > On
 
-      To start the app:
+      To start the app from the command line:
         monitor-keyboard-fix
 
-      Or copy the .app bundle to /Applications:
-        cp -r "#{opt_prefix}/Monitor Keyboard Fix.app" /Applications/
+      To copy the .app bundle to /Applications:
+        cp -r "$(brew --cellar)/monitor-keyboard-fix/#{version}/Monitor Keyboard Fix.app" /Applications/
 
       To start automatically at login, add it to:
         System Settings > General > Login Items
